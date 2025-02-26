@@ -19,6 +19,111 @@ Sales Details: Order Number, Sales, Order Date, Order Status
 Product Information: Product Line, MSRP, Product Code
 Customer Details: Customer Name, Contact Information, Country, Territory
 Time Dimensions: Quarter ID, Month ID, Year ID
+Data Overview, Cleaning & Transformation Process
+In this dataset, we aim to ensure data quality and consistency before conducting analysis. The steps taken focus on identifying missing values, handling duplicates, and ensuring data integrity.
+
+1. Data Overview
+The dataset consists of sales transactions with key details such as order numbers, customer details, product categories, pricing, and sales performance. Below are the main columns and their significance:
+
+Column Name	Description
+ORDERNUMBER	Unique identifier for each order
+SALES	Total sales amount per order
+ORDERDATE	Date when the order was placed
+STATUS	Order status (e.g., Shipped, Canceled)
+QTR_ID	Quarter in which the order was placed
+MONTH_ID	Month in which the order was placed
+YEAR_ID	Year in which the order was placed
+PRODUCTLINE	Category of the product (e.g., Trains, Ships, Planes)
+MSRP	Manufacturer’s Suggested Retail Price
+PRODUCTCODE	Unique product identifier
+CUSTOMERNAME	Name of the customer who placed the order
+PHONE	Contact number of the customer
+ADDRESSLINE1/ADDRESSLINE2	Customer's address details
+CITY, STATE, POSTALCODE, COUNTRY, TERRITORY	Geographic details of the customer
+CONTACTLASTNAME, CONTACTFIRSTNAME	Name of the customer contact person
+DEALSIZE	Size of the deal (Small, Medium, Large)
+Total Sales	Summarized total sales for analysis
+2. Data Cleaning & Transformation Process
+A. Identifying Missing Values
+sql
+Copy
+Edit
+SELECT COUNT(*) AS Missing_Values
+FROM cleaned_sales_data
+WHERE QUANTITYORDERED IS NULL
+   OR PRICEEACH IS NULL
+   OR CUSTOMERNAME IS NULL;
+✅ Purpose: This query helps identify missing values in crucial columns (QUANTITYORDERED, PRICEEACH, CUSTOMERNAME).
+✅ Action Taken: If missing values exist:
+
+For numerical columns like QUANTITYORDERED and PRICEEACH, missing values might be filled with the median or mean.
+For categorical values like CUSTOMERNAME, missing entries may be replaced using alternative customer details or marked as "Unknown."
+B. Detecting Duplicate Entries
+sql
+Copy
+Edit
+SELECT ORDERNUMBER, COUNT(*)
+FROM cleaned_sales_data
+GROUP BY ORDERNUMBER
+HAVING COUNT(*) > 1;
+✅ Purpose: This query checks for duplicate orders by counting occurrences of ORDERNUMBER.
+✅ Action Taken: If duplicates exist, they need to be investigated—duplicates may arise from data entry errors or system issues.
+
+C. Viewing Duplicate Entries
+sql
+Copy
+Edit
+SELECT * 
+FROM cleaned_sales_data
+WHERE ORDERNUMBER IN (
+    SELECT ORDERNUMBER 
+    FROM cleaned_sales_data
+    GROUP BY ORDERNUMBER
+    HAVING COUNT(*) > 1)
+ORDER BY ORDERNUMBER;
+✅ Purpose: This query retrieves all duplicate rows for further inspection.
+✅ Action Taken: It allows us to check whether duplicate records are legitimate (e.g., different quantities for the same order) or if they need removal.
+
+D. Removing Duplicates
+sql
+Copy
+Edit
+DELETE FROM cleaned_sales_data
+WHERE ROWID NOT IN (
+    SELECT MIN(ROWID) 
+    FROM cleaned_sales_data
+    GROUP BY ORDERNUMBER, QUANTITYORDERED, PRICEEACH
+);
+✅ Purpose: This deletes duplicate rows while keeping the first occurrence based on ORDERNUMBER, QUANTITYORDERED, and PRICEEACH.
+✅ Action Taken: Ensures no duplicate sales transactions, which prevents inflated sales calculations.
+
+E. Final Verification
+sql
+Copy
+Edit
+SELECT * FROM cleaned_sales_data;
+✅ Purpose: After cleaning, this retrieves the final dataset to confirm that the necessary changes have been made.
+
+3. Data Transformation for Analysis
+After cleaning the data, transformations are performed to enhance its usability:
+
+Sales Aggregation by Month & Product Line
+
+Monthly sales trends help identify peak periods.
+Top-performing product categories highlight key revenue sources.
+Customer Segmentation
+
+Identifying top 10 customers helps in customer retention strategies.
+Enhancing Data Consistency
+
+Standardizing date formats.
+Removing unwanted characters/spaces from text fields.
+4. Data Export
+After cleaning, the dataset is exported to Excel and SQL databases for reporting and visualization.
+
+Excel: Used for interactive dashboards.
+SQL: Used for advanced queries and business intelligence tools (Tableau, Power BI).
+
 📈 Key Visualizations and Insights
 1️⃣ Top 10 Customers (By Total Sales)
 📌 Finding:
